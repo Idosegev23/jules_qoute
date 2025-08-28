@@ -169,7 +169,7 @@ export default function QuoteContent() {
           <p className="text-lg">🌐 www.lionmedia.co.il</p>
           <div className="mt-6 bg-lm-light/10 rounded-xl p-4">
             <p className="text-sm text-lm-ink/60">
-              נשמח לענות על כל שאלה ולהתחיל בפיתוח המערכת שלכם!<br>
+              נשמח לענות על כל שאלה ולהתחיל בפיתוח המערכת שלכם!<br />
               לאישור ההצעה, אנא השתמשו בכפתורי הפעולות למטה.
             </p>
           </div>
