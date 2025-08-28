@@ -158,71 +158,20 @@ export default function QuoteContent() {
         </p>
       </div>
 
-      {/* Signature Section */}
-      <div className="neumorphic-card p-8">
-        <h2 className="text-2xl md:text-3xl font-bold text-lm-ink mb-8 text-center">
-          ✍️ אישור ההצעה
+      {/* Contact Info */}
+      <div className="neumorphic-card p-8 text-center">
+        <h2 className="text-2xl md:text-3xl font-bold text-lm-ink mb-6">
+          📞 פרטי התקשרות
         </h2>
-        
-        <div className="space-y-6">
-          {/* Terms and Conditions */}
-          <div className="bg-white/50 rounded-xl p-6 border border-lm-brand/10">
-            <h3 className="text-xl font-bold text-lm-ink mb-4">📋 תנאי ההצעה:</h3>
-            <ul className="space-y-2 text-lm-ink/80">
-              <li>• תוקף ההצעה: 30 יום מתאריך ההצעה</li>
-              <li>• תשלום: 50% מקדמה, 50% עם מסירת המערכת</li>
-              <li>• זמן פיתוח: 2-3 שבועות עבודה</li>
-              <li>• תחזוקה ותמיכה: 150 ₪ לחודש (לא כולל מע״מ)</li>
-              <li>• אחריות: 3 חודשי אחריות מלאה על המערכת</li>
-            </ul>
-          </div>
-
-          {/* Signature Area */}
-          <div className="bg-gradient-to-r from-lm-brand/5 to-lm-green/5 rounded-xl p-8 border-2 border-dashed border-lm-brand/30">
-            <h3 className="text-xl font-bold text-lm-ink mb-6 text-center">חתימת אישור</h3>
-            
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Client Signature */}
-              <div className="space-y-4">
-                <h4 className="font-bold text-lm-ink">Jules וילונות:</h4>
-                <div className="bg-white rounded-lg p-6 border-2 border-gray-200 min-h-[120px]">
-                  <div className="text-center text-gray-400 mt-8">
-                    חתימה + חותמת
-                  </div>
-                </div>
-                <div className="flex justify-between text-sm text-lm-ink/60">
-                  <span>שם: _________________</span>
-                  <span>תאריך: _____________</span>
-                </div>
-              </div>
-
-              {/* Lion Media Signature */}
-              <div className="space-y-4">
-                <h4 className="font-bold text-lm-ink">Lion Media:</h4>
-                <div className="bg-white rounded-lg p-6 border-2 border-gray-200 min-h-[120px]">
-                  <div className="text-center text-gray-400 mt-8">
-                    חתימה + חותמת
-                  </div>
-                </div>
-                <div className="flex justify-between text-sm text-lm-ink/60">
-                  <span>שם: _________________</span>
-                  <span>תאריך: _____________</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Contact Info */}
-          <div className="bg-white/50 rounded-xl p-6 border border-lm-brand/10 text-center">
-            <h3 className="text-lg font-bold text-lm-ink mb-3">📞 פרטי התקשרות</h3>
-            <div className="space-y-1 text-lm-ink/80">
-              <p><strong>Lion Media</strong></p>
-              <p>📧 triroars@gmail.com</p>
-              <p>🌐 www.lionmedia.co.il</p>
-              <p className="text-sm text-lm-ink/60 mt-4">
-                נשמח לענות על כל שאלה ולהתחיל בפיתוח המערכת שלכם!
-              </p>
-            </div>
+        <div className="space-y-3 text-lm-ink/80">
+          <p className="text-xl font-bold text-lm-brand">Lion Media</p>
+          <p className="text-lg">📧 triroars@gmail.com</p>
+          <p className="text-lg">🌐 www.lionmedia.co.il</p>
+          <div className="mt-6 bg-lm-light/10 rounded-xl p-4">
+            <p className="text-sm text-lm-ink/60">
+              נשמח לענות על כל שאלה ולהתחיל בפיתוח המערכת שלכם!<br>
+              לאישור ההצעה, אנא השתמשו בכפתורי הפעולות למטה.
+            </p>
           </div>
         </div>
       </div>

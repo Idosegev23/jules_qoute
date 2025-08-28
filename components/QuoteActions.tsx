@@ -119,9 +119,9 @@ export default function QuoteActions({
           <h4 className="font-semibold text-lm-ink mb-2">📝 הוראות:</h4>
           <ul className="text-sm text-lm-ink/70 space-y-1">
             <li>• הזן את כתובת המייל של הלקוח</li>
-            <li>• לחץ על "אשר הצעה" כדי לשלוח אישור למייל הלקוח וגם ל-triroars@gmail.com</li>
+            <li>• לחץ על "אשר הצעה" כדי לשלוח מייל אישור ללקוח ול-triroars@gmail.com</li>
             <li>• ניתן להדפיס את ההצעה בכל עת</li>
-            <li>• לאחר אישור, המערכת תשלח התראה אוטומטית</li>
+            <li>• המערכת תשלח סיכום מפורט של האישור</li>
           </ul>
         </div>
       </div>

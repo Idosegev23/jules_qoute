@@ -35,19 +35,7 @@ export async function POST(request: NextRequest) {
     const statusEmoji = isApproved ? '✅' : '❌';
     const statusColor = isApproved ? '#10b981' : '#ef4444';
 
-    // יצירת PDF רק במקרה של אישור
-    let pdfBuffer: Buffer | null = null;
-    if (isApproved) {
-      try {
-        // בסביבת ייצור נעביר את ה-HTML כמו שהוא (בעיה עם Puppeteer ב-Vercel)
-        const htmlContent = generatePrintHTML(customerEmail);
-        console.log('PDF generation skipped in production environment');
-        // ניתן להוסיף פתרון PDF עם Vercel Edge Functions בעתיד
-      } catch (pdfError) {
-        console.error('Error generating PDF:', pdfError);
-        // ממשיכים גם אם יצירת PDF נכשלה
-      }
-    }
+    // לא נוצר PDF - רק שליחת מיילי סיכום
 
     // תוכן המייל לצוות Lion Media
     const teamEmailContent = `
@@ -94,11 +82,10 @@ export async function POST(request: NextRequest) {
             </p>
 
             <div style="background: #e0f2fe; padding: 15px; border-radius: 10px; border-right: 4px solid #0597F2; margin: 20px 0; text-align: center;">
-              <h3 style="color: #0277bd; margin-top: 0;">📄 הצעת המחיר למימוש</h3>
+              <h3 style="color: #0277bd; margin-top: 0;">✅ הצעת המחיר אושרה</h3>
               <p style="margin: 0; color: #0277bd;">
-                ניתן לגשת להצעת המחיר המלאה במקור דרך הקישור המצורף, להדפיס ולחתום עליה.
-                <br><br>
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002'}" style="color: #0597F2; font-weight: bold;">🔗 לצפיה והדפסת ההצעה לחצו כאן</a>
+                ההצעה אושרה ואנחנו מתחילים בעבודה על הפרויקט!<br>
+                ניצור איתכם קשר בקרוב לתיאום פגישת קיק-אוף.
               </p>
             </div>
             
@@ -119,8 +106,7 @@ export async function POST(request: NextRequest) {
             <div style="background: #eff6ff; padding: 20px; border-radius: 10px; border-right: 4px solid #0597F2; margin: 20px 0;">
               <h3 style="color: #0597F2; margin-top: 0;">🚀 השלבים הבאים:</h3>
               <ol style="margin: 10px 0; padding-right: 20px;">
-                <li>אנא חתמו על הצעת המחיר המצורפת ושלחו חזרה</li>
-                <li>נתחיל בפיתוח המערכת מיד לאחר קבלת החתימה</li>
+                <li>נתחיל בפיתוח המערכת בימים הקרובים</li>
                 <li>נעדכן אתכם על התקדמות הפרויקט שבועית</li>
                 <li>נתאם פגישות ובדיקות לפי הצורך</li>
                 <li>המערכת תהיה מוכנה תוך 2-3 שבועות</li>
@@ -183,23 +169,12 @@ export async function POST(request: NextRequest) {
         </div>
       `;
 
-    // הכנת קבצי PDF לצירוף
-    const attachments = [];
-    if (isApproved && pdfBuffer) {
-      attachments.push({
-        filename: `הצעת_מחיר_Jules_וילונות_${new Date().toLocaleDateString('he-IL').replace(/\//g, '-')}.pdf`,
-        content: pdfBuffer,
-        contentType: 'application/pdf'
-      });
-    }
-
     // שליחת מייל לצוות Lion Media
     await transporter.sendMail({
       from: process.env.MAIL_FROM || '"Lion Media Quote System" <quotes@lionmedia.com>',
       to: 'triroars@gmail.com',
       subject: `${statusEmoji} הצעת מחיר ${statusText} - Jules וילונות | Lion Media`,
-      html: teamEmailContent,
-      attachments: attachments
+      html: teamEmailContent
     });
 
     // שליחת מייל ללקוח
@@ -209,15 +184,14 @@ export async function POST(request: NextRequest) {
       subject: isApproved 
         ? '🎉 הצעת המחיר אושרה! | Lion Media' 
         : 'עדכון בנוגע להצעת המחיר | Lion Media',
-      html: customerEmailContent,
-      attachments: attachments
+      html: customerEmailContent
     });
 
     return NextResponse.json(
       { 
         success: true, 
         message: isApproved 
-          ? `הצעת המחיר אושרה בהצלחה! נשלחו מיילים ללקוח (${customerEmail}) ולצוות Lion Media עם קישור להצעה להדפסה וחתימה.`
+          ? `הצעת המחיר אושרה בהצלחה! נשלחו מיילי אישור ללקוח (${customerEmail}) ולצוות Lion Media.`
           : `הצעת המחיר נדחתה. נשלחו הודעות מנומסות ללקוח (${customerEmail}) ולצוות Lion Media.`,
         status: action
       },
