@@ -1,50 +1,5 @@
-import puppeteer from 'puppeteer';
-
-export async function generateQuotePDF(): Promise<Buffer> {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
-
-  const page = await browser.newPage();
-  
-  // סט את הדף לגודל A4
-  await page.setViewport({ width: 794, height: 1123 });
-  
-  // לטען את הדף עם ההצעה
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002';
-  await page.goto(`${baseUrl}?pdf=true`, { 
-    waitUntil: 'networkidle0',
-    timeout: 30000
-  });
-
-  // יצירת PDF
-  const pdf = await page.pdf({
-    format: 'A4',
-    printBackground: true,
-    margin: {
-      top: '1cm',
-      right: '1cm',
-      bottom: '1cm',
-      left: '1cm'
-    },
-    displayHeaderFooter: true,
-    headerTemplate: `
-      <div style="font-size: 10px; width: 100%; text-align: center; color: #666; font-family: Arial;">
-        הצעת מחיר - Lion Media
-      </div>
-    `,
-    footerTemplate: `
-      <div style="font-size: 10px; width: 100%; text-align: center; color: #666; font-family: Arial;">
-        <span>עמוד <span class="pageNumber"></span> מתוך <span class="totalPages"></span></span>
-        <span style="float: right;">יוצר: ${new Date().toLocaleDateString('he-IL')}</span>
-      </div>
-    `
-  });
-
-  await browser.close();
-  return pdf as Buffer;
-}
+// PDF generation removed for Vercel compatibility
+// Use browser print functionality instead
 
 // פונקציה ליצירת HTML מותאם להדפסה
 export function generatePrintHTML(customerEmail: string): string {
