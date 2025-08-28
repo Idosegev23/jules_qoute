@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { generatePrintHTML } from '../../../lib/pdf-generator';
+import puppeteer from 'puppeteer';
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,6 +35,51 @@ export async function POST(request: NextRequest) {
     const statusText = isApproved ? 'אושרה' : 'נדחתה';
     const statusEmoji = isApproved ? '✅' : '❌';
     const statusColor = isApproved ? '#10b981' : '#ef4444';
+
+    // יצירת PDF רק במקרה של אישור
+    let pdfBuffer: Buffer | null = null;
+    if (isApproved) {
+      try {
+        const browser = await puppeteer.launch({
+          headless: true,
+          args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+
+        const page = await browser.newPage();
+        const htmlContent = generatePrintHTML(customerEmail);
+        
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+        await page.setViewport({ width: 794, height: 1123 });
+
+        pdfBuffer = await page.pdf({
+          format: 'A4',
+          printBackground: true,
+          margin: {
+            top: '1cm',
+            right: '1cm', 
+            bottom: '1cm',
+            left: '1cm'
+          },
+          displayHeaderFooter: true,
+          headerTemplate: `
+            <div style="font-size: 10px; width: 100%; text-align: center; color: #666; font-family: Arial;">
+              הצעת מחיר - Lion Media
+            </div>
+          `,
+          footerTemplate: `
+            <div style="font-size: 10px; width: 100%; text-align: center; color: #666; font-family: Arial;">
+              <span>עמוד <span class="pageNumber"></span> מתוך <span class="totalPages"></span></span>
+              <span style="float: right;">${new Date().toLocaleDateString('he-IL')}</span>
+            </div>
+          `
+        });
+
+        await browser.close();
+      } catch (pdfError) {
+        console.error('Error generating PDF:', pdfError);
+        // ממשיכים גם אם יצירת PDF נכשלה
+      }
+    }
 
     // תוכן המייל לצוות Lion Media
     const teamEmailContent = `
@@ -77,6 +124,15 @@ export async function POST(request: NextRequest) {
             <p style="font-size: 16px; line-height: 1.6; margin-bottom: 15px;">
               אנחנו שמחים להודיע לכם שהצעת המחיר למערכת הזמנת הפגישות אושרה!
             </p>
+
+            ${pdfBuffer ? `
+            <div style="background: #e0f2fe; padding: 15px; border-radius: 10px; border-right: 4px solid #0597F2; margin: 20px 0; text-align: center;">
+              <h3 style="color: #0277bd; margin-top: 0;">📄 הצעת המחיר החתומה</h3>
+              <p style="margin: 0; color: #0277bd;">
+                בצירוף למייל זה תמצאו את הצעת המחיר המלאה במקור PDF מוכן להדפסה וחתימה.
+              </p>
+            </div>
+            ` : ''}
             
             <div style="background: #f0fdf4; padding: 20px; border-radius: 10px; border-right: 4px solid #10b981; margin: 20px 0;">
               <h3 style="color: #059669; margin-top: 0;">📋 פרטי הפרויקט:</h3>
@@ -95,11 +151,21 @@ export async function POST(request: NextRequest) {
             <div style="background: #eff6ff; padding: 20px; border-radius: 10px; border-right: 4px solid #0597F2; margin: 20px 0;">
               <h3 style="color: #0597F2; margin-top: 0;">🚀 השלבים הבאים:</h3>
               <ol style="margin: 10px 0; padding-right: 20px;">
-                <li>נתחיל בפיתוח המערכת בימים הקרובים</li>
-                <li>נעדכן אתכם על התקדמות הפרויקט</li>
-                <li>נתאם פגישות לפי הצורך</li>
+                <li>אנא חתמו על הצעת המחיר המצורפת ושלחו חזרה</li>
+                <li>נתחיל בפיתוח המערכת מיד לאחר קבלת החתימה</li>
+                <li>נעדכן אתכם על התקדמות הפרויקט שבועית</li>
+                <li>נתאם פגישות ובדיקות לפי הצורך</li>
                 <li>המערכת תהיה מוכנה תוך 2-3 שבועות</li>
               </ol>
+            </div>
+            
+            <div style="background: #fff3cd; padding: 15px; border-radius: 10px; border-right: 4px solid #f59e0b; margin: 20px 0;">
+              <h3 style="color: #92400e; margin-top: 0;">💳 פרטי תשלום:</h3>
+              <p style="margin: 5px 0; color: #92400e;">
+                <strong>מקדמה:</strong> 2,950 ₪ (50% מהסכום הכולל)<br>
+                <strong>יתרה:</strong> 2,950 ₪ (עם מסירת המערכת המוכנה)<br>
+                <strong>מעמ על כל תשלום</strong>
+              </p>
             </div>
             
             <div style="text-align: center; margin-top: 25px;">
@@ -107,7 +173,10 @@ export async function POST(request: NextRequest) {
                 תודה שבחרתם ב-Lion Media! 🦁
               </p>
               <p style="font-size: 14px; color: #6b7280; margin-top: 10px;">
-                לכל שאלה, אנחנו כאן עבורכם
+                לכל שאלה או בירור, אנחנו כאן עבורכם
+              </p>
+              <p style="font-size: 14px; color: #0597F2; margin-top: 5px;">
+                📧 triroars@gmail.com | 🌐 www.lionmedia.co.il
               </p>
             </div>
           </div>
@@ -146,12 +215,23 @@ export async function POST(request: NextRequest) {
         </div>
       `;
 
+    // הכנת קבצי PDF לצירוף
+    const attachments = [];
+    if (isApproved && pdfBuffer) {
+      attachments.push({
+        filename: `הצעת_מחיר_Jules_וילונות_${new Date().toLocaleDateString('he-IL').replace(/\//g, '-')}.pdf`,
+        content: pdfBuffer,
+        contentType: 'application/pdf'
+      });
+    }
+
     // שליחת מייל לצוות Lion Media
     await transporter.sendMail({
       from: process.env.MAIL_FROM || '"Lion Media Quote System" <quotes@lionmedia.com>',
       to: 'triroars@gmail.com',
       subject: `${statusEmoji} הצעת מחיר ${statusText} - Jules וילונות | Lion Media`,
       html: teamEmailContent,
+      attachments: attachments
     });
 
     // שליחת מייל ללקוח
@@ -162,13 +242,17 @@ export async function POST(request: NextRequest) {
         ? '🎉 הצעת המחיר אושרה! | Lion Media' 
         : 'עדכון בנוגע להצעת המחיר | Lion Media',
       html: customerEmailContent,
+      attachments: attachments
     });
 
     return NextResponse.json(
       { 
         success: true, 
-        message: `הצעת המחיר ${statusText} בהצלחה! נשלחו התראות למייל.`,
-        status: action
+        message: isApproved 
+          ? `הצעת המחיר אושרה בהצלחה! נשלחו מיילים ללקוח (${customerEmail}) ולצוות Lion Media עם הצעת מחיר חתומה במקור PDF.`
+          : `הצעת המחיר נדחתה. נשלחו הודעות מנומסות ללקוח (${customerEmail}) ולצוות Lion Media.`,
+        status: action,
+        hasPDF: isApproved && !!pdfBuffer
       },
       { status: 200 }
     );
