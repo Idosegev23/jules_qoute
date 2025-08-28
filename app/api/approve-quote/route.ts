@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { generatePrintHTML } from '../../../lib/pdf-generator';
-import puppeteer from 'puppeteer';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // יצירת transporter עם Gmail
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
@@ -40,41 +39,10 @@ export async function POST(request: NextRequest) {
     let pdfBuffer: Buffer | null = null;
     if (isApproved) {
       try {
-        const browser = await puppeteer.launch({
-          headless: true,
-          args: ['--no-sandbox', '--disable-setuid-sandbox']
-        });
-
-        const page = await browser.newPage();
+        // בסביבת ייצור נעביר את ה-HTML כמו שהוא (בעיה עם Puppeteer ב-Vercel)
         const htmlContent = generatePrintHTML(customerEmail);
-        
-        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-        await page.setViewport({ width: 794, height: 1123 });
-
-        pdfBuffer = await page.pdf({
-          format: 'A4',
-          printBackground: true,
-          margin: {
-            top: '1cm',
-            right: '1cm', 
-            bottom: '1cm',
-            left: '1cm'
-          },
-          displayHeaderFooter: true,
-          headerTemplate: `
-            <div style="font-size: 10px; width: 100%; text-align: center; color: #666; font-family: Arial;">
-              הצעת מחיר - Lion Media
-            </div>
-          `,
-          footerTemplate: `
-            <div style="font-size: 10px; width: 100%; text-align: center; color: #666; font-family: Arial;">
-              <span>עמוד <span class="pageNumber"></span> מתוך <span class="totalPages"></span></span>
-              <span style="float: right;">${new Date().toLocaleDateString('he-IL')}</span>
-            </div>
-          `
-        });
-
-        await browser.close();
+        console.log('PDF generation skipped in production environment');
+        // ניתן להוסיף פתרון PDF עם Vercel Edge Functions בעתיד
       } catch (pdfError) {
         console.error('Error generating PDF:', pdfError);
         // ממשיכים גם אם יצירת PDF נכשלה
@@ -125,14 +93,14 @@ export async function POST(request: NextRequest) {
               אנחנו שמחים להודיע לכם שהצעת המחיר למערכת הזמנת הפגישות אושרה!
             </p>
 
-            ${pdfBuffer ? `
             <div style="background: #e0f2fe; padding: 15px; border-radius: 10px; border-right: 4px solid #0597F2; margin: 20px 0; text-align: center;">
-              <h3 style="color: #0277bd; margin-top: 0;">📄 הצעת המחיר החתומה</h3>
+              <h3 style="color: #0277bd; margin-top: 0;">📄 הצעת המחיר למימוש</h3>
               <p style="margin: 0; color: #0277bd;">
-                בצירוף למייל זה תמצאו את הצעת המחיר המלאה במקור PDF מוכן להדפסה וחתימה.
+                ניתן לגשת להצעת המחיר המלאה במקור דרך הקישור המצורף, להדפיס ולחתום עליה.
+                <br><br>
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002'}" style="color: #0597F2; font-weight: bold;">🔗 לצפיה והדפסת ההצעה לחצו כאן</a>
               </p>
             </div>
-            ` : ''}
             
             <div style="background: #f0fdf4; padding: 20px; border-radius: 10px; border-right: 4px solid #10b981; margin: 20px 0;">
               <h3 style="color: #059669; margin-top: 0;">📋 פרטי הפרויקט:</h3>
@@ -249,10 +217,9 @@ export async function POST(request: NextRequest) {
       { 
         success: true, 
         message: isApproved 
-          ? `הצעת המחיר אושרה בהצלחה! נשלחו מיילים ללקוח (${customerEmail}) ולצוות Lion Media עם הצעת מחיר חתומה במקור PDF.`
+          ? `הצעת המחיר אושרה בהצלחה! נשלחו מיילים ללקוח (${customerEmail}) ולצוות Lion Media עם קישור להצעה להדפסה וחתימה.`
           : `הצעת המחיר נדחתה. נשלחו הודעות מנומסות ללקוח (${customerEmail}) ולצוות Lion Media.`,
-        status: action,
-        hasPDF: isApproved && !!pdfBuffer
+        status: action
       },
       { status: 200 }
     );
